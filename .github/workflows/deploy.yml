@@ -1,0 +1,30 @@
+name: SSH Deploy
+on:
+    push:
+      branches:
+        - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: npm install && npm run build
+        env:
+          VITE_PUBLIC_API_URL: https://yestechnik-api.numerique360.com/
+          VITE_PUBLIC_DOC_URL: https://nyc3.digitaloceanspaces.com/techzone/
+
+      - name: List build files
+        run: ls -R dist/
+
+      - name: Deploy via SSH
+        uses: appleboy/scp-action@master
+        with:
+          host: 137.184.93.141
+          username: root
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          source: 'dist/*'
+          target: '/var/www/yestechnik-erp/'

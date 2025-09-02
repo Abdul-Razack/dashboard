@@ -1,0 +1,39 @@
+name: Build and Save Docker Image
+
+on:
+  push:
+    branches:
+      - live
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4  # Updated to latest version
+
+      - name: Install Dependencies and Build React App
+        run: |
+          npm install
+          npm run build
+        env:
+          VITE_PUBLIC_API_URL: http://192.168.0.7:3001/
+          VITE_PUBLIC_DOC_URL: http://192.168.0.7/web/bucket/
+
+      - name: List Build Files (Debugging)
+        run: ls -R dist/
+
+      - name: Build Docker Image Without Cache
+        run: docker build --no-cache -t erp-front .
+
+      - name: Save Docker Image as TAR File
+        run: docker save -o erp-front.tar erp-front
+
+      - name: Upload Docker TAR File as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: erp-front
+          path: erp-front.tar.gz
+          if-no-files-found: error
+          retention-days: 7  # Keep artifact for 7 days
